@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:newss_app/core/apis/api_service.dart';
+import 'package:newss_app/models/news_model.dart';
+
 import 'package:newss_app/widgets/image_item_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,15 +22,28 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('News App', style: Theme.of(context).textTheme.bodyLarge),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        itemBuilder: (context, index) {
-          return ImageItemWidget(
-            image: dummyImage,
-            title: "Dynamic Title $index",
-            onTap: () {},
+      body: FutureBuilder(
+        future: ApiService.getNews(),
+        builder: (context, snapshot) {
+          List<Article> articles = snapshot.data?.articles ?? [];
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error From Api'));
+          }
+          return ListView.builder(
+            itemBuilder: (context, index) {
+              return ImageItemWidget(
+                image: articles[index].urlToImage ?? dummyImage,
+                title: articles[index].title ?? '',
+                onTap: () {},
+              );
+            },
+            itemCount: articles.length,
           );
         },
-        itemCount: 30,
       ),
     );
   }
